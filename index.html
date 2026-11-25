@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificados | Feria Tecnológica</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --red: #D3052D;
+      --black: #171717;
+      --gray: #777;
+      --paper: #fff;
+      --toolbar-h: 58px
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: #eceef1;
+      color: var(--black);
+      font-family: Arial, Helvetica, sans-serif
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: #171717;
+      color: #fff;
+      padding: 12px 18px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 12px #0002
+    }
+
+    .toolbar span {
+      font-size: 13px;
+      opacity: .85
+    }
+
+    .toolbar button {
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 15px;
+      font-weight: 700;
+      cursor: pointer
+    }
+
+    .toolbar .print {
+      background: var(--red);
+      color: #fff
+    }
+
+    .toolbar .hint {
+      background: #fff;
+      color: #222
+    }
+
+    /* ===== Layout: panel izquierdo + certificado ===== */
+    .layout {
+      display: flex;
+      align-items: flex-start
+    }
+
+    .panel {
+      width: 340px;
+      flex: 0 0 340px;
+      position: sticky;
+      top: var(--toolbar-h);
+      max-height: calc(100vh - var(--toolbar-h));
+      overflow-y: auto;
+      background: #fff;
+      border-right: 1px solid #dee2e6;
+      padding: 16px
+    }
+
+    .content {
+      flex: 1;
+      min-width: 0
+    }
+
+    @media(max-width:991px) {
+      .layout {
+        flex-direction: column;
+        align-items: stretch
+      }
+
+      .panel {
+        position: static;
+        width: 100%;
+        flex: none;
+        max-height: none;
+        border-right: 0;
+        border-bottom: 1px solid #dee2e6
+      }
+    }
+
+    main {
+      padding: 28px 18px 50px
+    }
+
+    .sheet {
+      width: min(1120px, 100%);
+      aspect-ratio: 297/210;
+      margin: 0 auto 34px;
+      background: var(--paper);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 35px #0002;
+    }
+
+    .cert {
+      position: absolute;
+      inset: 1.4%;
+      border: 3px solid var(--red);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 2.5% 8% 2%;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 1.2%;
+    }
+
+    .brand svg {
+      width: 180px;
+      height: auto
+    }
+
+    .brand .brand-name {
+      font-weight: 800;
+      font-size: clamp(13px, 2vw, 23px);
+      line-height: 1.02;
+      text-align: left;
+      border-left: 2px solid var(--black);
+      padding-left: 18px
+    }
+
+    .eyebrow {
+      font-size: clamp(12px, 1.65vw, 22px);
+      letter-spacing: .28em;
+      font-weight: 700;
+      margin: 1.1% 0 .2%;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      width: 80%;
+      justify-content: center
+    }
+
+    .eyebrow:before,
+    .eyebrow:after {
+      content: "";
+      height: 2px;
+      background: var(--red);
+      flex: 1
+    }
+
+    h1 {
+      font-size: clamp(28px, 4.2vw, 57px);
+      line-height: 1;
+      margin: 0 0 1.2%;
+      font-weight: 900;
+      letter-spacing: -.035em
+    }
+
+    h1 .red {
+      color: var(--red)
+    }
+
+    .intro {
+      font-size: clamp(14px, 2vw, 25px);
+      margin: .5% 0 1.6%
+    }
+
+    .recipient {
+      width: 88%;
+      min-height: 38px;
+      border-bottom: 2px solid var(--black);
+      font-size: clamp(18px, 2.6vw, 32px);
+      font-weight: 700;
+      padding: 0 8px 5px;
+      outline: none
+    }
+
+    .description {
+      font-size: clamp(13px, 1.85vw, 24px);
+      line-height: 1.28;
+      margin: 1.7% 0 1.2%
+    }
+
+    .description strong {
+      color: var(--red)
+    }
+
+    .date {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-size: calc(clamp(15px, 2vw, 25px) * var(--date-scale, 1));
+      font-weight: 800;
+      margin: 1% 0 2%;
+      width: 88%;
+      /* alineada con la línea del nombre */
+      justify-content: flex-end;
+      /* a la izquierda */
+    }
+
+    .date:before {
+      content: "";
+      display: block;
+      flex: 1;
+      height: 1.5px;
+      background: var(--red);
+    }
+
+    /* .date:before {
+      display: non 
+    } */
+
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      width: 72%;
+      margin-top: auto;
+      padding-bottom: .2%;
+      gap: 18%
+    }
+
+    .signature {
+      width: 48%;
+      border-top: 1.5px solid var(--black);
+      padding-top: 7px;
+      font-size: clamp(12px, 1.5vw, 19px);
+      font-weight: 600
+    }
+
+    /* Modelo 1: sobrio */
+    .model-one:before,
+    .model-one:after {
+      content: "";
+      position: absolute;
+      width: 190px;
+      height: 130px;
+      pointer-events: none;
+      z-index: 1;
+      background: linear-gradient(135deg, var(--red) 0 34%, transparent 34% 40%, var(--black) 40% 55%, transparent 55% 61%, #ddd 61% 72%, transparent 72%)
+    }
+
+    .model-one:before {
+      top: 0;
+      left: 0
+    }
+
+    .model-one:after {
+      right: 0;
+      bottom: 0;
+      transform: rotate(180deg)
+    }
+
+    .model-one .cert {
+      padding-left: 10%;
+      padding-right: 10%
+    }
+
+    /* Modelo 2: moderno */
+    .model-two .cert {
+      padding-left: 10%;
+      padding-right: 8%;
+    }
+
+    .model-two .left-ribbon {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 17%;
+      background: linear-gradient(62deg, #a90022 0 26%, #d3052d 26% 60%, #f0f0f0 60% 64%, transparent 64%);
+    }
+
+    .model-two .right-ribbon {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 17%;
+      height: 35%;
+      background: linear-gradient(135deg, transparent 0 48%, var(--red) 48% 61%, var(--black) 61%);
+    }
+
+    .circuit {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 24%;
+      height: 34%;
+      opacity: .22;
+      pointer-events: none
+    }
+
+    .model-two .brand,
+    .model-two .eyebrow,
+    .model-two h1,
+    .model-two .intro,
+    .model-two .recipient,
+    .model-two .description,
+    .model-two .date,
+    .model-two .signatures {
+      position: relative;
+      z-index: 2
+    }
+
+    /* ===== Cinta de puesto (opcional) ===== */
+    .ribbon {
+      position: absolute;
+      top: 0;
+      right: 7%;
+      width: 10.5%;
+      height: 27%;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 18%;
+      color: #fff;
+      text-align: center;
+      background: var(--red);
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 86%, 0 100%);
+    }
+
+    .ribbon.black {
+      background: var(--black)
+    }
+
+    .ribbon-big {
+      font-size: clamp(16px, 3.4vw, 44px);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -.02em;
+      white-space: nowrap
+    }
+
+    .ribbon-small {
+      font-size: clamp(7px, 1vw, 13px);
+      font-weight: 700;
+      letter-spacing: .16em;
+      margin-top: 6%;
+      white-space: nowrap
+    }
+
+    .faculty {
+      position: relative;
+      z-index: 2;
+      font-size: clamp(11px, 1.5vw, 19px);
+      font-weight: 700;
+      letter-spacing: .08em;
+      margin-top: -.4%
+    }
+
+    .faculty:empty {
+      display: none
+    }
+
+    [contenteditable="true"] {
+      cursor: text
+    }
+
+    [contenteditable="true"]:focus {
+      outline: 1px dashed #d3052d;
+      outline-offset: 4px;
+      background: #fff8f9
+    }
+
+    .note {
+      text-align: center;
+      color: #5e6269;
+      font-size: 13px;
+      margin: 18px auto;
+      max-width: 850px
+    }
+
+    @media(max-width:700px) {
+      main {
+        padding: 14px 8px
+      }
+
+      .sheet {
+        aspect-ratio: 297/210
+      }
+
+      .brand svg {
+        width: 105px
+      }
+
+      .brand {
+        gap: 10px
+      }
+
+      .brand .brand-name {
+        padding-left: 9px
+      }
+
+      .cert {
+        padding-left: 5%;
+        padding-right: 5%
+      }
+
+      .signatures {
+        width: 85%;
+        gap: 8%
+      }
+
+      .model-one:before,
+      .model-one:after {
+        width: 100px;
+        height: 75px
+      }
+
+      .model-two .left-ribbon {
+        width: 12%
+      }
+    }
+
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+
+    @page {
+      size: A4 landscape;
+      margin: 0
+    }
+
+    @media print {
+
+      html,
+      body {
+        background: #fff;
+        margin: 0;
+        padding: 0;
+        width: 297mm;
+        height: 210mm
+      }
+
+      /* el panel (también tiene d-print-none), la barra y la nota no se imprimen */
+      .toolbar,
+      .panel,
+      .note {
+        display: none !important
+      }
+
+      .layout,
+      .content {
+        display: block
+      }
+
+      main {
+        padding: 0
+      }
+
+      .sheet {
+        width: 297mm;
+        height: 209.5mm;
+        aspect-ratio: auto;
+        margin: 0;
+        box-shadow: none;
+        page-break-after: always;
+        break-after: page;
+        overflow: hidden
+      }
+
+      .sheet:last-child {
+        page-break-after: auto;
+        break-after: auto
+      }
+
+      .cert {
+        inset: 4mm
+      }
+
+      .brand svg {
+        width: 48mm
+      }
+
+      .brand .brand-name {
+        font-size: 16pt
+      }
+
+      .eyebrow {
+        font-size: 15pt
+      }
+
+      h1 {
+        font-size: 38pt
+      }
+
+      .intro {
+        font-size: 17pt
+      }
+
+      .recipient {
+        font-size: 24pt;
+        min-height: 12mm
+      }
+
+      .description {
+        font-size: 17pt
+      }
+
+      .date {
+        font-size: calc(18pt * var(--date-scale, 1))
+      }
+
+      .signature {
+        font-size: 13pt
+      }
+
+      .ribbon-big {
+        font-size: 34pt
+      }
+
+      .ribbon-small {
+        font-size: 10pt
+      }
+
+      .faculty {
+        font-size: 13pt
+      }
+
+      [contenteditable="true"]:focus {
+        outline: none;
+        background: transparent
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="toolbar"><span>Haz clic sobre los textos para editarlos o usa el formulario de la izquierda. Los cambios
+      se conservan mientras mantengas
+      abierto este archivo.</span><button class="hint"
+      onclick="document.designMode='on';alert('Edición activada. Haz clic y escribe sobre cualquier texto.')">Editar
+      página</button><button class="print" onclick="window.print()">Imprimir / Guardar PDF</button></div>
+
+  <div class="layout">
+
+    <!-- ===== Panel de formulario (Bootstrap) — no se imprime ===== -->
+    <aside class="panel d-print-none">
+      <form id="certForm" autocomplete="off" onsubmit="return false">
+
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h2 class="h6 fw-bold mb-0">Datos del certificado</h2>
+          <button type="button" id="btnReset" class="btn btn-outline-secondary btn-sm">Limpiar</button>
+        </div>
+
+        <!-- Campos dinámicos: cambian en cada certificado -->
+        <fieldset class="border rounded p-3 mb-3">
+          <legend class="float-none w-auto px-2 fs-6 mb-0">
+            <span class="badge text-bg-danger">Dinámicos</span>
+          </legend>
+
+          <div class="mb-3">
+            <label for="f-nombre" class="form-label small fw-semibold mb-1">Nombre del participante</label>
+            <input type="text" class="form-control form-control-sm" id="f-nombre" value="NOMBRE DEL PARTICIPANTE">
+          </div>
+
+          <div class="mb-2">
+            <label for="f-fecha" class="form-label small fw-semibold mb-1">Fecha</label>
+            <input type="date" class="form-control form-control-sm" id="f-fecha" value="2026-11-27">
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="f-anio" checked>
+            <label class="form-check-label small" for="f-anio">Mostrar el año</label>
+          </div>
+          <div class="mt-3">
+            <label for="f-fecha-tam" class="form-label small fw-semibold mb-1">
+              Tamaño de la fecha: <span id="v-fecha-tam">100%</span>
+            </label>
+            <input type="range" class="form-range" id="f-fecha-tam" min="60" max="180" step="5" value="100">
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="f-fecha-bold" checked>
+            <label class="form-check-label small" for="f-fecha-bold">Fecha en negrita</label>
+          </div>
+        </fieldset>
+
+        <!-- Cinta de puesto (opcional) -->
+        <fieldset class="border rounded p-3 mb-3">
+          <legend class="float-none w-auto px-2 fs-6 mb-0">
+            <span class="badge text-bg-secondary">Cinta de puesto</span>
+          </legend>
+
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" role="switch" id="f-cinta">
+            <label class="form-check-label small" for="f-cinta">Mostrar cinta</label>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label for="f-cinta-grande" class="form-label small fw-semibold mb-1">Texto grande</label>
+              <input type="text" class="form-control form-control-sm" id="f-cinta-grande" value="1er"
+                list="lista-puestos">
+              <datalist id="lista-puestos">
+                <option value="1er"></option>
+                <option value="2do"></option>
+                <option value="3er"></option>
+                <option value="4to"></option>
+                <option value="5to"></option>
+              </datalist>
+            </div>
+            <div class="col-6">
+              <label for="f-cinta-peq" class="form-label small fw-semibold mb-1">Texto inferior</label>
+              <input type="text" class="form-control form-control-sm" id="f-cinta-peq" value="PUESTO">
+            </div>
+          </div>
+
+          <div>
+            <label for="f-cinta-color" class="form-label small fw-semibold mb-1">Color</label>
+            <select class="form-select form-select-sm" id="f-cinta-color">
+              <option value="red" selected>Rojo</option>
+              <option value="black">Negro</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <!-- Campos estáticos: generales del evento -->
+        <fieldset class="border rounded p-3 mb-3">
+          <legend class="float-none w-auto px-2 fs-6 mb-0">
+            <span class="badge text-bg-dark">Estáticos</span>
+          </legend>
+
+          <div class="mb-3">
+            <label for="f-marca" class="form-label small fw-semibold mb-1">Título junto al logo</label>
+            <textarea class="form-control form-control-sm" id="f-marca" rows="2">FERIA
+TECNOLÓGICA</textarea>
+            <div class="form-text">Un salto de línea = una línea nueva.</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="f-facultad" class="form-label small fw-semibold mb-1">Facultad (bajo el logo)</label>
+            <input type="text" class="form-control form-control-sm" id="f-facultad" value="NOMBRE DE LA FACULTAD">
+            <div class="form-text">Déjalo vacío para ocultar la línea.</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="f-etiqueta" class="form-label small fw-semibold mb-1">Etiqueta superior</label>
+            <input type="text" class="form-control form-control-sm" id="f-etiqueta" value="CERTIFICADO">
+          </div>
+
+          <div class="mb-3">
+            <label for="f-intro" class="form-label small fw-semibold mb-1">Texto de otorgamiento</label>
+            <input type="text" class="form-control form-control-sm" id="f-intro"
+              value="Se otorga el presente certificado a:">
+          </div>
+
+          <div class="mb-3">
+            <label for="f-desc" class="form-label small fw-semibold mb-1">Descripción (cuerpo)</label>
+            <textarea class="form-control form-control-sm" id="f-desc" rows="5">Por su participación en la *FERIA TECNOLÓGICA*,
+demostrando interés, creatividad e innovación.</textarea>
+            <div class="form-text">Enter = línea nueva. Encierra un texto entre <code>*asteriscos*</code> para
+              resaltarlo en rojo.</div>
+          </div>
+
+          <div class="row g-2">
+            <div class="col-6">
+              <label for="f-firma1" class="form-label small fw-semibold mb-1">Firma 1</label>
+              <input type="text" class="form-control form-control-sm" id="f-firma1" value="Organización">
+            </div>
+            <div class="col-6">
+              <label for="f-firma2" class="form-label small fw-semibold mb-1">Firma 2</label>
+              <input type="text" class="form-control form-control-sm" id="f-firma2" value="Coordinación">
+            </div>
+          </div>
+        </fieldset>
+
+        <p class="form-text mb-0">Si editas un texto directamente sobre el certificado, el formulario se actualiza
+          (excepto fecha y descripción).</p>
+      </form>
+    </aside>
+
+    <!-- ===== Certificado ===== -->
+    <div class="content">
+      <p class="note"><br></p>
+      <main>
+        <section class="sheet model-two">
+          <div class="left-ribbon"></div>
+          <div class="right-ribbon"></div>
+          <svg class="circuit" viewBox="0 0 300 190" fill="none" aria-hidden="true">
+            <g stroke="#555" stroke-width="3">
+              <path d="M10 25H100L145 70H280M45 65H120L165 110H295M95 5L145 55H220L270 105M145 140H220L265 185" />
+              <path d="M180 10L220 50H290" />
+            </g>
+            <g fill="#555">
+              <circle cx="10" cy="25" r="6" />
+              <circle cx="45" cy="65" r="6" />
+              <circle cx="95" cy="5" r="6" />
+              <circle cx="145" cy="140" r="6" />
+              <circle cx="295" cy="110" r="6" />
+            </g>
+          </svg>
+          <div class="cert">
+            <div class="brand"><svg width="150" height="33" viewBox="0 0 140 31" fill="none"
+                xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M101.422 22.0937H101.614V20.1028H102.676V25.6588H101.658V25.3H101.466C101.254 25.5681 100.919 25.7591 100.373 25.7591C99.3412 25.7591 98.719 24.8775 98.719 23.693C98.719 22.5085 99.3412 21.6268 100.373 21.6268C100.907 21.6345 101.217 21.8178 101.422 22.0937ZM101.658 23.7007C101.658 23.0795 101.369 22.5297 100.7 22.5297C100.032 22.5297 99.7662 23.0486 99.7662 23.7007C99.7662 24.3528 100.063 24.8794 100.7 24.8794C101.338 24.8794 101.658 24.32 101.658 23.7007Z"
+                  fill="black"></path>
+                <path
+                  d="M107.073 23.8207H104.28C104.311 24.494 104.623 24.8779 105.237 24.8779C105.639 24.8779 105.867 24.7312 105.965 24.4631H107.042C106.884 25.2521 106.277 25.7653 105.222 25.7653C103.985 25.7653 103.233 24.9377 103.233 23.6837C103.233 22.4297 103.998 21.633 105.199 21.633C106.399 21.633 107.058 22.4278 107.081 23.4985L107.073 23.8207ZM104.318 23.1088H105.988C105.969 22.9123 105.874 22.7311 105.723 22.6049C105.573 22.4787 105.379 22.4178 105.183 22.4355C104.982 22.419 104.782 22.4788 104.621 22.6034C104.461 22.7279 104.353 22.9081 104.318 23.1088Z"
+                  fill="black"></path>
+                <path d="M108.679 20.1028V25.6588H107.616V20.1028H108.679Z" fill="black"></path>
+                <path
+                  d="M113.486 20.2025C114.731 20.2025 115.445 20.8449 115.445 21.9388C115.445 23.0326 114.731 23.7078 113.486 23.7078H112.146V25.6582H111.017V20.2025H113.486ZM113.327 22.7104C114.024 22.7104 114.285 22.4423 114.285 21.96C114.285 21.4777 114.026 21.2095 113.327 21.2095H112.142V22.7104H113.327Z"
+                  fill="black"></path>
+                <path
+                  d="M119.318 23.8206H116.524C116.555 24.4939 116.867 24.8778 117.482 24.8778C117.884 24.8778 118.112 24.7312 118.209 24.463H119.287C119.128 25.2521 118.521 25.7652 117.466 25.7652C116.23 25.7652 115.477 24.9376 115.477 23.6836C115.477 22.4297 116.243 21.6329 117.443 21.6329C118.644 21.6329 119.302 22.4278 119.325 23.4984L119.318 23.8206ZM116.563 23.1088H118.232C118.223 23.0113 118.195 22.9166 118.15 22.8301C118.105 22.7435 118.043 22.6667 117.969 22.6042C117.894 22.5417 117.808 22.4946 117.715 22.4657C117.622 22.4367 117.525 22.4264 117.428 22.4355C117.227 22.4194 117.026 22.4794 116.867 22.6038C116.707 22.7283 116.598 22.9083 116.563 23.1088Z"
+                  fill="black"></path>
+                <path
+                  d="M122.496 22.7271H122.113C121.291 22.7271 120.92 23.1554 120.92 23.9445V25.6576H119.857V21.7317H120.882V22.185H121.073C121.196 21.9921 121.498 21.7413 122.12 21.7413H122.486L122.496 22.7271Z"
+                  fill="black"></path>
+                <path
+                  d="M123.907 21.7329V23.9592C123.907 24.5109 124.173 24.8177 124.672 24.8177C125.212 24.8177 125.538 24.3508 125.538 23.8222V21.7329H126.6V25.6588H125.568V25.3H125.377C125.141 25.6048 124.785 25.7591 124.291 25.7591C123.313 25.7591 122.85 25.1534 122.85 24.1444V21.7329H123.907ZM125.128 21.2121H124.196L124.893 20.1028H126.016L125.128 21.2121Z"
+                  fill="black"></path>
+                <path d="M102.997 13.697H101.314V18.1476H100.183V13.697H98.5V12.6861H102.997V13.697Z" fill="black">
+                </path>
+                <path
+                  d="M106.27 16.3045H103.479C103.509 16.9759 103.819 17.3598 104.436 17.3598C104.838 17.3598 105.066 17.2131 105.165 16.9469H106.241C106.082 17.734 105.475 18.2472 104.42 18.2472C103.176 18.2472 102.424 17.4196 102.424 16.1656C102.424 14.9116 103.189 14.1168 104.388 14.1168C105.586 14.1168 106.247 14.9116 106.27 15.9823V16.3045ZM103.517 15.5926H105.184C105.175 15.4952 105.148 15.4005 105.102 15.3139C105.057 15.2274 104.995 15.1506 104.921 15.0881C104.846 15.0256 104.76 14.9785 104.667 14.9495C104.574 14.9206 104.477 14.9103 104.38 14.9194C104.179 14.9029 103.979 14.9628 103.819 15.0873C103.659 15.2119 103.552 15.3921 103.517 15.5926Z"
+                  fill="black"></path>
+                <path
+                  d="M110.45 16.8235C110.353 17.6723 109.648 18.2472 108.668 18.2472C107.464 18.2472 106.704 17.4273 106.704 16.181C106.704 14.9348 107.47 14.1168 108.668 14.1168C109.648 14.1168 110.322 14.6666 110.422 15.4672H109.367C109.283 15.1701 109.062 15.0081 108.676 15.0081C108.017 15.0081 107.766 15.5367 107.766 16.1656C107.766 16.7945 108.025 17.3617 108.676 17.3617C109.101 17.3617 109.344 17.1688 109.405 16.8254L110.45 16.8235Z"
+                  fill="black"></path>
+                <path
+                  d="M113.68 18.1469V15.9206C113.68 15.3708 113.414 15.064 112.914 15.064C112.375 15.064 112.049 15.5309 112.049 16.0595V18.1469H110.987V14.2152H112.011V14.574H112.202C112.438 14.2692 112.794 14.1168 113.288 14.1168C114.266 14.1168 114.729 14.7207 114.729 15.7296V18.1469H113.68Z"
+                  fill="black"></path>
+                <path
+                  d="M119.316 16.181C119.316 17.4118 118.551 18.2472 117.299 18.2472C116.047 18.2472 115.281 17.4118 115.281 16.181C115.281 14.9502 116.07 14.1168 117.299 14.1168C118.528 14.1168 119.316 14.9502 119.316 16.181ZM118.254 16.181C118.254 15.5541 117.967 15.01 117.297 15.01C116.627 15.01 116.339 15.5541 116.339 16.181C116.339 16.808 116.634 17.3598 117.297 17.3598C117.959 17.3598 118.254 16.8157 118.254 16.181Z"
+                  fill="black"></path>
+                <path d="M120.93 12.5876V18.1475H119.867V12.5876H120.93Z" fill="black"></path>
+                <path
+                  d="M125.517 16.1821C125.517 17.4129 124.751 18.2482 123.499 18.2482C122.247 18.2482 121.481 17.4129 121.481 16.1821C121.481 14.9513 122.27 14.1179 123.499 14.1179C124.728 14.1179 125.517 14.9513 125.517 16.1821ZM124.454 16.1821C124.454 15.5551 124.167 15.0111 123.497 15.0111C122.827 15.0111 122.54 15.5551 122.54 16.1821C122.54 16.8091 122.835 17.3608 123.497 17.3608C124.16 17.3608 124.454 16.8168 124.454 16.1821ZM123.924 13.6973H122.992L123.689 12.59H124.81L123.924 13.6973Z"
+                  fill="black"></path>
+                <path
+                  d="M129.834 14.2152V17.9559C129.834 19.0729 129.029 19.7616 127.877 19.7616C126.809 19.7616 126.087 19.3024 126.005 18.4382H127.058C127.111 18.7584 127.377 18.9205 127.862 18.9205C128.53 18.9205 128.773 18.4613 128.773 17.8633V17.6337H128.581C128.407 17.8787 128.111 18.0851 127.565 18.0851C126.525 18.0851 125.865 17.2672 125.865 16.1039C125.865 14.9406 126.533 14.1168 127.573 14.1168C128.118 14.1168 128.467 14.3387 128.618 14.574H128.809V14.2152H129.834ZM128.809 16.1039C128.809 15.4923 128.484 15.01 127.852 15.01C127.253 15.01 126.92 15.4692 126.92 16.1039C126.92 16.7386 127.253 17.19 127.852 17.19C128.484 17.19 128.809 16.7019 128.809 16.1039Z"
+                  fill="black"></path>
+                <path
+                  d="M130.655 13.5437V12.5791H131.733V13.5437H130.655ZM131.725 18.1486H130.662V14.217H131.725V18.1486Z"
+                  fill="black"></path>
+                <path
+                  d="M136.016 16.8235C135.916 17.6723 135.212 18.2472 134.233 18.2472C133.027 18.2472 132.269 17.4273 132.269 16.181C132.269 14.9348 133.035 14.1168 134.233 14.1168C135.212 14.1168 135.888 14.6666 135.985 15.4672H134.93C134.848 15.1701 134.628 15.0081 134.241 15.0081C133.581 15.0081 133.33 15.5367 133.33 16.1656C133.33 16.7945 133.588 17.3617 134.241 17.3617C134.666 17.3617 134.907 17.1688 134.969 16.8254L136.016 16.8235Z"
+                  fill="black"></path>
+                <path
+                  d="M138.988 17.8112H138.797C138.66 17.9625 138.49 18.0804 138.301 18.156C138.112 18.2315 137.908 18.2627 137.705 18.2472C136.825 18.2472 136.325 17.6337 136.325 16.9392C136.325 16.3257 136.756 15.6312 137.91 15.6312H138.948V15.5309C138.948 15.1258 138.722 14.9194 138.259 14.9194C137.834 14.9194 137.629 15.0718 137.598 15.3399H136.545C136.566 14.5818 137.265 14.1168 138.205 14.1168C139.26 14.1168 139.972 14.5374 139.972 15.5926V18.1469H138.988V17.8112ZM138.942 16.5707V16.3257H138.109C137.654 16.3257 137.38 16.4955 137.38 16.8543C137.38 17.2131 137.639 17.3983 138.071 17.3983C138.184 17.4084 138.298 17.3943 138.405 17.3571C138.513 17.3198 138.611 17.2602 138.694 17.1822C138.777 17.1041 138.842 17.0093 138.886 16.9039C138.931 16.7986 138.952 16.685 138.95 16.5707H138.942Z"
+                  fill="black"></path>
+                <path
+                  d="M103.256 5.13277V8.5802C103.256 9.93062 102.442 10.6907 100.976 10.6907C99.5094 10.6907 98.713 9.93448 98.713 8.5802V5.13277H99.8445V8.55705C99.8445 9.23033 100.254 9.67404 100.993 9.67404C101.732 9.67404 102.132 9.23033 102.132 8.55705V5.13277H103.256ZM106.645 10.5923V8.36606C106.645 7.81625 106.378 7.50951 105.879 7.50951C105.339 7.50951 105.013 7.97637 105.013 8.50496V10.5923H103.955V6.66067H104.981V7.02143H105.172C105.408 6.71469 105.766 6.56228 106.26 6.56228C107.238 6.56228 107.701 7.16612 107.701 8.17507V10.5923H106.645ZM108.408 5.98932V5.02473H109.486V5.98932H108.408ZM109.478 10.5923H108.415V6.66067H109.478V10.5923ZM110.014 6.66067H111.099L111.905 9.6451H112.231L112.997 6.67032H114.101L112.978 10.602H111.132L110.014 6.66067ZM118.055 8.74997H115.25C115.281 9.42132 115.591 9.80523 116.207 9.80523C116.609 9.80523 116.837 9.65861 116.937 9.39045H118.014C117.856 10.1795 117.249 10.6907 116.192 10.6907C114.953 10.6907 114.201 9.86503 114.201 8.61107C114.201 7.3571 114.957 6.55843 116.165 6.55843C117.373 6.55843 118.026 7.35325 118.049 8.42394L118.055 8.74997ZM115.298 8.0381H116.973C116.954 7.84139 116.859 7.66019 116.708 7.53406C116.557 7.40793 116.362 7.34709 116.167 7.36482C115.964 7.34528 115.761 7.40378 115.599 7.52862C115.436 7.65346 115.327 7.83542 115.292 8.0381H115.298ZM121.29 7.65227H120.907C120.088 7.65227 119.715 8.08054 119.715 8.86765V10.5885H118.652V6.66067H119.676V7.10438H119.868C119.99 6.92111 120.295 6.66067 120.917 6.66067H121.281L121.29 7.65227ZM123.986 7.73522C123.934 7.469 123.698 7.38411 123.356 7.38411C123.013 7.38411 122.781 7.4825 122.781 7.71979C122.781 7.95708 122.933 7.98794 123.199 8.04196L123.905 8.14807C124.642 8.26382 125.15 8.62264 125.15 9.40975C125.15 10.0676 124.566 10.6869 123.427 10.6869C122.242 10.6869 121.671 10.1679 121.589 9.34994H122.644C122.697 9.70877 122.971 9.86117 123.409 9.86117C123.848 9.86117 124.085 9.71648 124.085 9.4329C124.085 9.14931 123.911 9.06635 123.522 8.9969L122.757 8.87536C122.14 8.75961 121.707 8.46252 121.707 7.78924C121.707 7.11596 122.226 6.55843 123.381 6.55843C124.361 6.55843 124.952 7.033 125.037 7.73522H123.986ZM125.709 5.98546V5.02087H126.788V5.98546H125.709ZM126.781 10.5885H125.703V6.66067H126.767L126.781 10.5885ZM130.031 7.02143H130.223V5.03245H131.285V10.5923H130.261V10.2335H130.07C129.857 10.4997 129.524 10.6907 128.977 10.6907C127.945 10.6907 127.321 9.81101 127.321 8.6265C127.321 7.44199 127.943 6.55843 128.975 6.55843C129.515 6.55843 129.825 6.75134 130.031 7.02143ZM130.267 8.6265C130.267 8.00724 129.978 7.45742 129.31 7.45742C128.642 7.45742 128.375 7.97637 128.375 8.6265C128.375 9.27663 128.67 9.80523 129.31 9.80523C129.949 9.80523 130.267 9.24577 130.267 8.6265ZM134.509 10.2547H134.318C134.181 10.4063 134.011 10.5244 133.821 10.6C133.632 10.6755 133.428 10.7066 133.225 10.6907C132.344 10.6907 131.843 10.0792 131.843 9.38467C131.843 8.77119 132.275 8.07669 133.43 8.07669H134.469V7.97637C134.469 7.57124 134.241 7.36482 133.778 7.36482C133.353 7.36482 133.148 7.51723 133.118 7.78538H132.063C132.086 7.02914 132.784 6.56228 133.726 6.56228C134.781 6.56228 135.495 6.98284 135.495 8.0381V10.5923H134.509V10.2547ZM134.463 9.01619V8.77119H133.629C133.173 8.77119 132.899 8.94096 132.899 9.29978C132.899 9.65861 133.158 9.83802 133.59 9.83802C133.702 9.84716 133.815 9.83262 133.921 9.79533C134.028 9.75804 134.125 9.69882 134.207 9.62146C134.289 9.54411 134.355 9.45031 134.399 9.34609C134.443 9.24186 134.465 9.1295 134.463 9.01619ZM138.746 7.02143H138.937V5.03245H140V10.5923H138.989V10.2335H138.798C138.585 10.4997 138.25 10.6907 137.703 10.6907C136.671 10.6907 136.047 9.81101 136.047 8.6265C136.047 7.44199 136.657 6.55843 137.689 6.55843C138.223 6.55843 138.541 6.75134 138.746 7.02143ZM138.989 8.6265C138.989 8.00724 138.7 7.45742 138.032 7.45742C137.364 7.45742 137.098 7.97637 137.098 8.6265C137.098 9.27663 137.394 9.80523 138.032 9.80523C138.669 9.80523 138.989 9.24577 138.989 8.6265Z"
+                  fill="black"></path>
+                <path d="M30.5661 0H0V30.8012H30.5661V0Z" fill="#D3052D"></path>
+                <path
+                  d="M18.5086 6.84479H23.7733V20.8178L20.4231 23.9546H10.1463L6.79602 20.8178V6.84479H12.0607V19.1278L12.7787 19.8513H17.7945L18.5124 19.1278L18.5086 6.84479Z"
+                  fill="white"></path>
+                <path d="M61.1344 30.8012V0L30.5683 0V30.8012L61.1344 30.8012Z" fill="black"></path>
+                <path d="M43.2166 23.9546V10.9462H37.3584V6.84479H54.3415V10.9462H48.4832V23.9546H43.2166Z"
+                  fill="white">
+                </path>
+                <path d="M91.7005 0H61.1344V30.8012H91.7005V0Z" fill="#D3052D"></path>
+                <path
+                  d="M73.1909 19.2745V23.9546H67.9261V6.84479H81.7963L84.9073 9.73855V16.3749L81.7963 19.2687L73.1909 19.2745ZM78.9246 10.9616H73.1909V15.1846H78.9246L79.6406 14.4689V11.6851L78.9246 10.9616Z"
+                  fill="white"></path>
+              </svg>
+              <div class="brand-name" contenteditable="true">FERIA<br>TECNOLÓGICA</div>
+            </div>
+            <div class="faculty" contenteditable="true">NOMBRE DE LA FACULTAD</div>
+            <div class="eyebrow" contenteditable="true" style="margin-top: 100px !important;">CERTIFICADO</div>
+            <h1>DE <span class="red">PARTICIPACIÓN</span></h1>
+            <p class="intro" contenteditable="true" style="margin-top: 50px !important;">Se otorga el presente
+              certificado a:</p>
+            <div class="recipient" contenteditable="true">NOMBRE DEL PARTICIPANTE</div>
+            <p class="description" contenteditable="true" style="margin-top: 50px !important;">Por su participación en
+              la <strong>FERIA TECNOLÓGICA</strong>,<br>
+              demostrando interés, creatividad e innovación.</p>
+            <div class="date"><span contenteditable="true">27 de noviembre</span></div>
+            <div class="signatures">
+              <div class="signature" contenteditable="true">Organización</div>
+              <div class="signature" contenteditable="true">Coordinación</div>
+            </div>
+          </div>
+          <div class="ribbon d-none" id="ribbon">
+            <div class="ribbon-big" contenteditable="true" style="margin-top: 150px !important">1er</div>
+            <div class="ribbon-small" contenteditable="true">PUESTO</div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Enter = salto de línea simple en las secciones editables
+    document.querySelectorAll('[contenteditable="true"]').forEach(el => { el.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.execCommand('insertLineBreak') } }) });
+
+    // ===== Formulario -> certificado =====
+    const $ = id => document.getElementById(id);
+    const q = (sel, i = 0) => document.querySelectorAll(sel)[i];
+    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const setText = (el, v) => { el.innerHTML = esc(v).replace(/\n/g, '<br>') };
+    const getText = el => { let o = ''; el.childNodes.forEach(n => { o += n.nodeName === 'BR' ? '\n' : n.textContent }); return o };
+
+    // Campos de texto simples (formulario <-> elemento contenteditable)
+    const simple = [
+      ['f-nombre', '.recipient', 0],
+      ['f-marca', '.brand-name', 0],
+      ['f-etiqueta', '.eyebrow', 0],
+      ['f-intro', '.intro', 0],
+      ['f-firma1', '.signature', 0],
+      ['f-firma2', '.signature', 1],
+      ['f-cinta-grande', '.ribbon-big', 0],   // nuevo
+      ['f-cinta-peq', '.ribbon-small', 0],
+      ['f-facultad', '.faculty', 0]
+    ];
+    simple.forEach(([id, sel, i]) => {
+      const input = $(id), el = q(sel, i);
+      input.addEventListener('input', () => setText(el, input.value));
+      el.addEventListener('input', () => { input.value = getText(el) });
+    });
+
+    // Descripción: textarea con *rojo* y saltos de línea (sincronizada en ambos sentidos)
+    const desc = q('.description');
+    const descToHTML = s => esc(s).replace(/\*(.+?)\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+    const descToText = el => {
+      let o = '';
+      el.childNodes.forEach(n => {
+        if (n.nodeName === 'BR') o += '\n';
+        else if (n.nodeName === 'STRONG') o += '*' + n.textContent + '*';
+        else o += n.textContent;
+      });
+      return o;
+    };
+    const applyDesc = () => { desc.innerHTML = descToHTML($('f-desc').value) };
+    $('f-desc').addEventListener('input', applyDesc);
+    desc.addEventListener('input', () => { $('f-desc').value = descToText(desc) });
+
+    // Fecha en español: "27 de noviembre del 2026"
+    const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const dateEl = q('.date span');
+    const applyDate = () => {
+      const v = $('f-fecha').value;
+      if (!v) { dateEl.textContent = ''; return }
+      const [y, m, d] = v.split('-').map(Number);
+      dateEl.textContent = d + ' de ' + MESES[m - 1] + ($('f-anio').checked ? ' del ' + y : '');
+    };
+    $('f-fecha').addEventListener('input', applyDate);
+    $('f-anio').addEventListener('change', applyDate);
+
+    // Restablecer valores del formulario y reaplicarlos
+    $('btnReset').addEventListener('click', () => {
+      $('certForm').reset();
+      simple.forEach(([id, sel, i]) => setText(q(sel, i), $(id).value));
+      applyDesc(); applyDate(); applyRibbon(); applyDateStyle();
+    });
+
+    // Cinta de puesto: mostrar/ocultar y color
+    const ribbon = $('ribbon');
+    const applyRibbon = () => {
+      const on = $('f-cinta').checked;
+      ribbon.classList.toggle('d-none', !on);
+      ribbon.classList.toggle('black', $('f-cinta-color').value === 'black');
+      ['f-cinta-grande', 'f-cinta-peq', 'f-cinta-color'].forEach(id => $(id).disabled = !on);
+    };
+    $('f-cinta').addEventListener('change', applyRibbon);
+    $('f-cinta-color').addEventListener('change', applyRibbon);
+    applyRibbon();
+
+    // Estilo de la fecha: tamaño (escala) y negrita
+    const dateBox = q('.date');
+    const applyDateStyle = () => {
+      const t = $('f-fecha-tam').value;
+      dateBox.style.setProperty('--date-scale', t / 100);
+      dateBox.style.fontWeight = $('f-fecha-bold').checked ? 800 : 400;
+      $('v-fecha-tam').textContent = t + '%';
+    };
+    $('f-fecha-tam').addEventListener('input', applyDateStyle);
+    $('f-fecha-bold').addEventListener('change', applyDateStyle);
+    applyDateStyle();
+
+    applyDate(); // muestra la fecha inicial del formulario
+
+    applyDesc();
+  </script>
+</body>
+
+</html>
